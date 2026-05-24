@@ -1,40 +1,38 @@
 #![no_std]
 #![no_main]
-#![feature(panic_info_message)]
-#[macro_use]
 
-mod console;
-mod lang_items;
-mod sbi;
-
-use core::arch::global_asm;
+use core::arch::{asm, global_asm};
 
 global_asm!(include_str!("entry.asm"));
 
-fn clear_bss() {
-    unsafe extern "C" {
-        fn sbss();
-        fn ebss();
+fn sbi_call(which: usize, arg0: usize, arg1: usize, arg2: usize) -> usize {
+    let ret;
+    unsafe {
+        asm!(
+            "ecall",
+            inlateout("x10") arg0 => ret,
+            in("x11") arg1,
+            in("x12") arg2,
+            in("x17") which,
+        );
     }
-    (sbss as *const () as usize..ebss as *const () as usize).for_each(|a| unsafe { (a as *mut u8).write_volatile(0) });
+    ret
+}
+
+pub fn console_putchar(c: usize) {
+    sbi_call(1, c, 0, 0);
 }
 
 #[unsafe(no_mangle)]
 pub fn rust_main() -> ! {
-    unsafe extern "C" {
-        fn stext(); fn etext();
-        fn srodata(); fn erodata();
-        fn sdata(); fn edata();
-        fn sbss(); fn ebss();
-        fn boot_stack(); fn boot_stack_top();
+    for c in b"Hello Kernel From Rust!\n" {
+        console_putchar(*c as usize);
     }
-    clear_bss();
-    println!("Hello, world!");
-    println!(".text [{:#x}, {:#x})", stext as *const () as usize, etext as *const () as usize);
-    println!(".rodata [{:#x}, {:#x})", srodata as *const () as usize, erodata as *const () as usize);
-    println!(".data [{:#x}, {:#x})", sdata as *const () as usize, edata as *const () as usize);
-    println!("boot_stack [{:#x}, {:#x})", boot_stack as *const () as usize, boot_stack_top as *const () as usize);
-    println!(".bss [{:#x}, {:#x})", sbss as *const () as usize, ebss as *const () as usize);
-    println!("Hello, world!");
-    panic!("Shutdown machine!");
+
+    loop {}
+}
+
+#[panic_handler]
+fn panic(_info: &core::panic::PanicInfo) -> ! {
+    loop {}
 }

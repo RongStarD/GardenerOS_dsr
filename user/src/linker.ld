@@ -1,7 +1,7 @@
 OUTPUT_ARCH(riscv)
 ENTRY(_start)
 
-BASE_ADDRESS = 0x80200000;
+BASE_ADDRESS = 0x10000;
 
 SECTIONS
 {
@@ -14,14 +14,27 @@ SECTIONS
 
     .rodata : {
         *(.rodata .rodata.*)
+        *(.srodata .srodata.*)
     }
 
     .data : {
         *(.data .data.*)
+        *(.sdata .sdata.*)
     }
 
     .bss : {
-        *(.bss.stack)
+        start_bss = .;
+
         *(.bss .bss.*)
+        *(.sbss .sbss.*)
+
+        end_bss = .;
+    }
+
+    /DISCARD/ : {
+        *(.eh_frame)
+        *(.debug*)
+        *(.comment)
+        *(.riscv.attributes)
     }
 }
