@@ -1,3 +1,6 @@
+os/target/
 target/
-**/target/
 os/qemu.log
+os/qemu.log
+target/
+*.bin

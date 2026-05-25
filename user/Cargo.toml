@@ -1,0 +1,10 @@
+[package]
+name = "user_lib"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+[[bin]]
+name = "hello_world"
+path = "src/bin/hello_world.rs"
