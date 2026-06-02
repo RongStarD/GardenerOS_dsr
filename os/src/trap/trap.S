@@ -12,39 +12,40 @@
     .align 2
 
 __alltraps:
-    # 1. 保存用户态的 sp 到 sscratch，并切换到内核栈
     csrrw sp, sscratch, sp
-    # 2. 在内核栈上分配空间
-    addi sp, sp, -32*8
-    # 3. 保存 32 个通用寄存器
-    .set n, 0
-    .rept 32
+    addi sp, sp, -34*8
+    sd x1, 1*8(sp)
+    sd x3, 3*8(sp)
+    .set n, 5
+    .rept 27
         SAVE_GP %n
         .set n, n+1
     .endr
-    # 4. 保存 sstatus 和 sepc 到栈上
     csrr t0, sstatus
     csrr t1, sepc
     sd t0, 32*8(sp)
     sd t1, 33*8(sp)
-    # 5. 调用 trap_handler，参数是 Context 的地址
+    csrr t2, sscratch
+    sd t2, 2*8(sp)
     mv a0, sp
     call trap_handler
+    j __restore
 
 __restore:
-    # 1. 恢复 sstatus 和 sepc
+    # mv sp, a0
     ld t0, 32*8(sp)
     ld t1, 33*8(sp)
+    ld t2, 2*8(sp)
     csrw sstatus, t0
     csrw sepc, t1
-    # 2. 恢复通用寄存器
-    .set n, 0
-    .rept 32
+    csrw sscratch, t2
+    ld x1, 1*8(sp)
+    ld x3, 3*8(sp)
+    .set n, 5
+    .rept 27
         LOAD_GP %n
         .set n, n+1
     .endr
-    # 3. 恢复 sp
-    ld sp, 2*8(sp)
-    # 4. 切换回用户栈并返回用户态
+    addi sp, sp, 34*8
     csrrw sp, sscratch, sp
     sret

@@ -5,7 +5,7 @@ pub struct TrapContext {
     pub sepc: usize,
 }
 
-use riscv::register::sstatus::{self, Sstatus, SPP};
+use riscv::register::sstatus::{self, SPP};
 
 impl TrapContext {
     pub fn set_sp(&mut self, sp: usize) { self.x[2] = sp; }

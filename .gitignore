@@ -2,3 +2,4 @@ os/target/
 target/
 os/qemu.log
 os/qemu.log
+bootloader/

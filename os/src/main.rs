@@ -1,38 +1,39 @@
 #![no_std]
 #![no_main]
 
-use core::arch::{asm, global_asm};
+#[macro_use]
+mod console;
+mod lang_items;
+mod sbi;
+mod syscall;
+mod trap;
+mod loader;
+mod config;
+mod task;
+
+use core::arch::global_asm;
 
 global_asm!(include_str!("entry.asm"));
+global_asm!(include_str!("link_app.S"));
 
-fn sbi_call(which: usize, arg0: usize, arg1: usize, arg2: usize) -> usize {
-    let ret;
-    unsafe {
-        asm!(
-            "ecall",
-            inlateout("x10") arg0 => ret,
-            in("x11") arg1,
-            in("x12") arg2,
-            in("x17") which,
-        );
+fn clear_bss() {
+    extern "C" {
+        fn sbss();
+        fn ebss();
     }
-    ret
+    let sbss_ptr = sbss as *const () as usize;
+    let ebss_ptr = ebss as *const () as usize;
+    (sbss_ptr..ebss_ptr).for_each(|a| unsafe {
+        (a as *mut u8).write_volatile(0)
+    });
 }
 
-pub fn console_putchar(c: usize) {
-    sbi_call(1, c, 0, 0);
-}
-
-#[unsafe(no_mangle)]
+#[no_mangle]
 pub fn rust_main() -> ! {
-    for c in b"Hello Kernel From Rust!\n" {
-        console_putchar(*c as usize);
-    }
-
-    loop {}
-}
-
-#[panic_handler]
-fn panic(_info: &core::panic::PanicInfo) -> ! {
-    loop {}
+    clear_bss();
+    println!("[Kernel] Hello, world!");
+    trap::init();
+    loader::load_apps();
+    task::run_first_task();
+    panic!("Unreachable in rust_main!");
 }
