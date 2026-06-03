@@ -34,3 +34,8 @@ pub fn write(fd: usize, buf: &[u8]) -> isize { syscall::sys_write(fd, buf) }
 pub fn exit(exit_code: i32) -> isize { syscall::sys_exit(exit_code) }
 
 pub fn yield_() -> isize { syscall::sys_yield() }
+
+
+pub fn get_time() -> isize {
+    syscall::sys_get_time()
+}
