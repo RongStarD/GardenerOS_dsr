@@ -7,7 +7,9 @@ mod page_table;
 pub use address::*;
 pub use frame_allocator::{frame_alloc, FrameTracker};
 pub use memory_set::{remap_test, KERNEL_SPACE, MapPermission, MemorySet};
-pub use page_table::{translated_byte_buffer, PageTable, PageTableEntry, PTEFlags};
+pub use page_table::{
+    translated_byte_buffer, translated_refmut, translated_str, PageTable, PageTableEntry, PTEFlags,
+};
 
 pub fn init() {
     heap_allocator::init_heap();
